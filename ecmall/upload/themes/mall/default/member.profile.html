@@ -2,6 +2,8 @@
 <style>
 .borline td { padding:10px 0px; }
 .ware_list th { text-align:left; }
+.information .photo b .txt {position: static;}
+.information .photo b .change_avatar {position:absolute;width: 100%;height: 100%;}
 </style>
 <script type="text/javascript">
 
@@ -42,8 +44,7 @@ $(function(){
                         <div class="photo width13">
                             <p><img src="<!--{if $profile.portrait}-->{$profile.portrait}?{$random_number}<!--{else}-->{$site_url}/data/system/default_user_portrait.gif<!--{/if}-->" width="120" height="120" alt="" ectype="avatar" /></p>
                             <b>
-                                <span class="file1"><input type="file" size="1" maxlength="0" hidefocus="true" ectype="change_avatar" name="portrait1" /></span>
-                                <span class="file2"><input type="file" size="1" maxlength="0" hidefocus="true" ectype="change_avatar" name="portrait2" /></span>
+                                <input type="file" name="portrait" class="change_avatar">
                                 <div class="txt">{$lang.change_portrait}</div>
                             </b>
                         </div>
@@ -114,4 +115,31 @@ $(function(){
         <div class="clear"></div>
     </div>
 </div>
+<script>
+     // 图片上传
+        function getObjectURL(file){  
+                var url=null   
+                if(window.createObjectURL!=undefined){ // basic  
+                    url=window.createObjectURL(file)  
+                }else if(window.URL!=undefined){ // mozilla(firefox)  
+                    url=window.URL.createObjectURL(file)  
+                } else if(window.webkitURL!=undefined){ // webkit or chrome  
+                    url=window.webkitURL.createObjectURL(file)  
+                }  
+                return url  ;
+        }
+        $('.change_avatar').change(function(){
+            var src = getObjectURL(this.files[0]),
+                size = this.files[0].size;
+            if(size > 1024 * 20){
+                alert('图片大小不能超过2M')
+            }else{
+                if(src){
+                    $('img[ectype="avatar"]').attr('src', src);
+                    $('.change_avatar').removeAttr('name');
+                    $(this).attr('name', 'portrait');
+                }
+            }
+        });
+</script>
 {include file=footer.html}

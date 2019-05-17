@@ -2,20 +2,49 @@
 <style>
 .information .info table{ width :auto;}
 </style>
+<script src="http://unpkg.com/wangeditor/release/wangEditor.min.js"></script>
 <script type="text/javascript">
 //<!CDATA[
 $(function(){
+         // 图片上传
+        function getObjectURL(file){  
+                var url=null   
+                if(window.createObjectURL!=undefined){ // basic  
+                    url=window.createObjectURL(file)  
+                }else if(window.URL!=undefined){ // mozilla(firefox)  
+                    url=window.URL.createObjectURL(file)  
+                } else if(window.webkitURL!=undefined){ // webkit or chrome  
+                    url=window.webkitURL.createObjectURL(file)  
+                }  
+                return url  ;
+        }
         $('input[ectype="change_store_logo"]').change(function(){
-            var src = getFullPath($(this)[0]);
-            $('img[ectype="store_logo"]').attr('src', src);
-            $('input[ectype="change_store_logo"]').removeAttr('name');
-            $(this).attr('name', 'store_logo');
+            var src = getObjectURL(this.files[0]),
+                size = this.files[0].size;
+            if(size > 1024 * 20){
+                alert('图片大小不能超过2M')
+            }else{
+                if(src){
+                    $('img[ectype="store_logo"]').attr('src', src);
+                    $('input[ectype="change_store_logo"]').removeAttr('name');
+                    $(this).attr('name', 'store_logo');
+                }
+            }
         });
+
         $('input[ectype="change_store_banner"]').change(function(){
-            var src = getFullPath($(this)[0]);
-            $('img[ectype="store_banner"]').attr('src', src);
-            $('input[ectype="change_store_banner"]').removeAttr('name');
-            $(this).attr('name', 'store_banner');
+            var src = getObjectURL(this.files[0]),
+                size = this.files[0].size;
+            if(size > 1024 * 20){
+                alert('图片大小不能超过2M')
+            }else{
+                if(src){
+                    $('img[ectype="store_banner"]').attr('src', src);
+                    $('input[ectype="change_store_banner"]').removeAttr('name');
+                    $(this).attr('name', 'store_banner');
+                }
+            }
+            
         });
 
         $('#my_store_form').validate({
@@ -80,13 +109,33 @@ $(function(){
                 }
             }
     });
-   regionInit("region");
+        regionInit("region");
         $(".right").mouseover(function(){
             $(this).next("div").show();
         });
         $(".right").mouseout(function(){
             $(this).next("div").hide();
         });
+        //格式转换
+        function unescape(str) {
+            var elem = document.createElement('div')
+            elem.innerHTML = str
+            return elem.innerText || elem.textContent
+        }
+        // 编辑器
+        var E = window.wangEditor,
+            WangEditor = new E('#editors'),
+            description = $('#store_introduction');
+            WangEditor.customConfig.uploadImgShowBase64 = true;
+        var datas = "<?php echo htmlspecialchars($this->_var['store']['description']); ?>";
+        WangEditor.customConfig.onchange = function(html){
+            description.val(html)
+        }
+
+        WangEditor.create()
+        if(datas != ''){
+            WangEditor.txt.html(unescape(datas))
+        }
 });
 function add_uploadedfile(file_data)
 {
@@ -132,15 +181,13 @@ function drop_image(file_id)
             <form method="post" enctype="multipart/form-data" id="my_store_form">
                     <div class="setup">
                         <div class="photo relative1">
-
-                            <p><img src="<!--{if $store.store_logo neq ''}-->{$store.store_logo}<!--{else}-->data/system/default_store_logo.gif<!--{/if}-->" width="120" height="120" ectype="store_logo" /></p>
-                            <b class="ie6hack">
-                                <span class="file1"><input type="file" size="1" maxlength="0" hidefocus="true" ectype="change_store_logo" /></span>
-                                <span class="file2" style="_right: -22px;"><input type="file" ectype="change_store_logo" size="1" maxlength="0" hidefocus="true" /></span>
-                                <div class="txt">{$lang.change_store_logo}</div>
+                            <p><img src="<?php if ($this->_var['store']['store_logo'] != ''): ?><?php echo $this->_var['store']['store_logo']; ?><?php else: ?>data/system/default_store_logo.gif<?php endif; ?>" width="120" height="120" ectype="store_logo" /></p>
+                            <b>
+                                <input ectype="change_store_logo" type="file" name="file" size="1" hidefocus="true" maxlength="0" style="display:block;z-index:10; position:absolute;width: 120px; *width:0px; height: 28px; cursor: hand; cursor: pointer;  opacity:0; filter: alpha(opacity=0);">
+                                <div class="txt" style="position:absolute;z-index:9">更换店标</div>
                             </b>
-                            <span class="explain">{$lang.change_store_logo_des}</span>
-                        </div>
+                            <span class="explain">此处为您的店铺标志，将显示在店铺信息栏里建议尺寸100*100像素</span>
+                        </div>      
                         <div class="photo relative2">
                             <p><img src="<!--{ if $store.store_banner neq ''}-->{$store.store_banner}<!--{else}-->{res file=images/member/banner.gif}<!--{/if}-->" width="607" height="120" ectype="store_banner" /></p>
                             <b>
@@ -236,8 +283,16 @@ function drop_image(file_id)
                              {/if}
                              <tr>
                                 <th class="align3">{$lang.description}:</th>
-                                <td><div class="editor"><div>
-                                    <textarea name="description" id="description" style="width:100%; height:350px;">{$store.description|escape}</textarea></div>
+                                <td> <!-- <div class="editor"><div> 
+                                    <textarea name="description" id="description" style="width:100%; height:350px;"><?php echo htmlspecialchars($this->_var['store']['description']); ?></textarea> -->
+                                    <textarea name="store_introduction" id="store_introduction"  style="width:100%; height:350px;display: none;"></textarea>
+                                    <div id="editors">
+                                        <div></div>
+                                    </div>
+                                    <div class="upload-wrap" style="display: none">
+                                        <input type="hidden" id="editor_upload_button">
+                                    </div>
+                                    <!--
                                    <div style=" position: relative; top: 10px; z-index: 5;"><a class="btn3" id="open_editor_uploader">{$lang.uploadedfile}</a>
                                    <div class="upload_con" id="editor_uploader" style="display:none">
                                             <div class="upload_con_top"></div>
@@ -266,7 +321,6 @@ function drop_image(file_id)
                                         </div>
                                     </div>
                                     <ul id="desc_images" class="preview">
-                                        <!--{foreach from=$files_belong_store item=file}-->
                                         <li ectype="handle_pic" file_name="{$file.file_name|escape}" file_path="{$file.file_path}" file_id="{$file.file_id}">
                                         <input type="hidden" name="file_id[]" value="{$file.file_id}">
                                             <div class="pic">
@@ -280,11 +334,10 @@ function drop_image(file_id)
                                                 <p title="{$file.file_name|escape}" class="name">{$file.file_name|escape}</p>
                                             </div>
                                         </li>
-                                        <!--{/foreach}-->
                                     </ul>
                                     <div class="clear"></div>
                                     </div>
-                                    <div class="issuance"><input type="submit" class="btn" value="{$lang.submit}" /></div>
+                                    <div class="issuance"><input type="submit" class="btn" value="{$lang.submit}" /></div>-->
                                  </td>
                              </tr>
                          </table></form>

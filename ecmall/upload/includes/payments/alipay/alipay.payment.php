@@ -28,7 +28,7 @@ class AlipayPayment extends BasePayment
         $params = array(
 
             /* 基本信息 */
-            'agent'             => $agent,
+            'extend_param'      => 'isv^sh22',
             'service'           => $service,
             'partner'           => $this->_config['alipay_partner'],
             '_input_charset'    => CHARSET,

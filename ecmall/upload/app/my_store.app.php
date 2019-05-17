@@ -131,7 +131,7 @@ class My_storeApp extends StoreadminbaseApp
                 'store_name' => $_POST['store_name'],
                 'region_id'  => $_POST['region_id'],
                 'region_name'=> $_POST['region_name'],
-                'description'=> $_POST['description'],
+                'description'=> isset($_POST['store_introduction']) ? $_POST['store_introduction'] : $_POST['description'],
                 'address'    => $_POST['address'],
                 'tel'        => $_POST['tel'],
                 'im_qq'      => $_POST['im_qq'],

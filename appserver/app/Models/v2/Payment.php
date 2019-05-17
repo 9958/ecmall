@@ -38,7 +38,7 @@ class Payment extends BaseModel {
                 $model = self::where(['type' => 'payment', 'status' => 1, 'code' => 'wxpay.web'])->get()->toArray();
 
                 //天工收银
-                if ($arr = Pay::where('payment_code', 'yunqi')->where('enabled', '1')->where('store_id', $shop)->first()) {
+                /*if ($arr = Pay::where('payment_code', 'yunqi')->where('enabled', '1')->where('store_id', $shop)->first()) {
                     $arr = [
                         'name' => '天工收银',
                         'code' => 'teegon.wap',
@@ -46,7 +46,7 @@ class Payment extends BaseModel {
                     ];
 
                     array_push($model, $arr);
-                }
+                }*/
 
                  // 支付宝wap支付
                 if ($arr = self::where(['type' => 'payment', 'status' => 1, 'code' => 'alipay.wap'])->first()) {
@@ -151,7 +151,7 @@ class Payment extends BaseModel {
                 "seller_id"       => $config['seller_id'],
                 "payment_type"    => '1',
                 "notify_url"      => url("/v2/order.notify.alipay.wap"),
-                "return_url"      => $referer,
+                "return_url"      => urldecode($referer),
                 "_input_charset"  => 'utf-8',
                 "out_trade_no"    => $order->order_sn,
                 "subject"         => $shop_name,

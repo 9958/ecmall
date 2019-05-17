@@ -18,7 +18,7 @@ define('IS_POST', (strtoupper($_SERVER['REQUEST_METHOD']) == 'POST'));
 define('IN_ECM', true);
 
 /* 定义PHP_SELF常量 */
-define('PHP_SELF',  htmlentities(isset($_SERVER['PHP_SELF']) ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME']));
+define('PHP_SELF',  htmlentities(isset($_SERVER['PHP_SELF']) && $_SERVER['PHP_SELF'] ? $_SERVER['PHP_SELF'] : $_SERVER['SCRIPT_NAME']));
 
 /* 当前ECMall程序版本 */
 define('VERSION', '3.0.0');
@@ -445,7 +445,8 @@ function import()
     {
         return;
     }
-    array_walk($c, create_function('$item, $key', 'include_once(ROOT_PATH . \'/includes/libraries/\' . $item . \'.php\');'));
+    // array_walk($c, create_function('$item, $key', 'include_once(ROOT_PATH . \'/includes/libraries/\' . $item . \'.php\');'));
+    array_walk($c, function($item){ include_once(ROOT_PATH . '/includes/libraries/' . $item . '.php'); });
 }
 
 /**
@@ -511,7 +512,8 @@ function rdump($arr)
 {
     echo '<pre>';
 	$fun = func_get_args();
-    array_walk($fun, create_function('&$item, $key', 'print_r($item);'));
+    // array_walk($fun, create_function('&$item, $key', 'print_r($item);'));
+    array_walk($fun, function(&$item) { print_r($item); });
     echo '</pre>';
     exit();
 }
@@ -526,7 +528,8 @@ function rdump($arr)
 function vdump($arr)
 {
     echo '<pre>';
-    array_walk(func_get_args(), create_function('&$item, $key', 'var_dump($item);'));
+    // array_walk(func_get_args(), create_function('&$item, $key', 'var_dump($item);'));
+    array_walk(func_get_args(), function(&$item){ var_dump($item); });
     echo '</pre>';
     exit();
 }
@@ -539,7 +542,6 @@ function vdump($arr)
  */
 function &db()
 {
-    include_once(ROOT_PATH . '/eccore/model/mysql.php');
     static $db = null;
     if ($db === null)
     {
@@ -567,7 +569,13 @@ function &db()
             }
 
             $charset = (CHARSET == 'utf-8') ? 'utf8' : CHARSET;
-            $db = new cls_mysql();
+            if (PHP_VERSION >= '7.2') {
+                include_once(ROOT_PATH . '/eccore/model/mysqli.php');
+                $db = new cls_mysqli();
+            } else {
+                include_once(ROOT_PATH . '/eccore/model/mysql.php');
+                $db = new cls_mysql();
+            }
             $db->cache_dir = ROOT_PATH. '/temp/query_caches/';
             $db->connect($cfg['host']. ':' .$cfg['port'], $cfg['user'],
                 $cfg['pass'], $cfg['path'], $charset);
